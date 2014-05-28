@@ -26,13 +26,20 @@ sub create : Local : Args(0) {
     my $username  = $c->request->params->{'username'};
     my $password  = $c->request->params->{'password'};
     my $client_id = $c->request->params->{'id'};
+    my $barcode;
+    my $name;
 
     my $user =
       $c->model('DB::User')->single( { username => $username } );
 
     my ( $success, $error_code, $details ) = ( 1, undef, undef ); # Defaults for non-sip using systems
-    ( $success, $error_code, $details ) = Libki::SIP::authenticate_via_sip( $c, $user, $username, $password )
+    #( $success, $error_code, $details ) = Libki::SIP::authenticate_via_sip( $c, $user, $username, $password )
+    ( $success, $error_code, $barcode, $name ) = Libki::SIP::authenticate_via_sip( $c, $user, $username, $password )
         if $c->config->{SIP}->{enable};
+
+    if ($username =~ /^guest/ ) {$success=1;$barcode=$username;$name='override';}
+    $username=$barcode;
+    $user = $c->model('DB::User')->single( { username => $username } );
 
     if (
         $success && 
@@ -66,19 +73,41 @@ sub create : Local : Args(0) {
         {
             $c->stash( 'success' => 0, 'reason' => 'USER_ALREADY_RESERVED' );
         }
+	elsif ( $user->minutes < 1 ) {
+	    $c->stash( 'success' => 0, 'reason' => 'NO_TIME' ); 
+	}
         else {
             if ( $c->model('DB::Reservation')
                 ->create( { user_id => $user->id(), client_id => $client_id } )
               )
             {
                 $c->stash( 'success' => 1 );
-            }
-            else {
+            } else {
                 $c->stash( 'success' => 0, 'reason' => 'UNKNOWN' );
             }
-        }
+	}
     } else {
-        $c->stash( 'success' => 0, 'reason' => $error_code, details => $details );
+
+	if ($success) {
+                    # GRPL - if SIP authenticates, but they're not local, go ahead and add them
+                    unless ($username =~ /^guest/){
+                        my $min = 60;
+                        if ($username =~ /^555/) { $min = 30; }
+
+                        my $user = $c->model('DB::User')->update_or_create(
+                        {
+                                username          => $username,
+                                password          => $password,
+                                minutes_allotment => $min,
+                                status            => 'enabled',
+                                notes             => $name,
+                        }
+                        );
+			 $c->stash( 'success' => 0, 'reason' => 'NEW_USER_ADDED' );
+                    }
+  	}else{
+        	$c->stash( 'success' => 0, 'reason' => $error_code, details => $details );
+	}
     }
 
     $c->logout();
