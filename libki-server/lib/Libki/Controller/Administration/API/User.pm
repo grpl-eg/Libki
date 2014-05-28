@@ -109,7 +109,7 @@ sub create_guest : Local : Args(0) {
         {
             username          => $username,
             password          => $password,
-            minutes_allotment => $minutes,
+            minutes_allotment => 30,
             status            => 'enabled',
             is_guest          => 'Yes',
         }
@@ -123,80 +123,6 @@ sub create_guest : Local : Args(0) {
         'password' => $password,
         'minutes'  => $minutes
     );
-    $c->forward( $c->view('JSON') );
-}
-
-=head2 batch_create_guest
-
-=cut
-
-sub batch_create_guest : Local : Args(0) {
-    my ( $self, $c ) = @_;
-
-    my $params = $c->request->params;
-
-    my $success = 0;
-
-    my $guest_count =
-      $c->model('DB::Setting')->find('GuestBatchCount')->value();
-    my $batch_guest_pass_username_label =
-      $c->model('DB::Setting')->find('BatchGuestPassUsernameLabel')->value();
-    my $batch_guest_pass_password_label =
-      $c->model('DB::Setting')->find('BatchGuestPassPasswordLabel')->value();
-    my $minutes =
-      $c->model('DB::Setting')->find('DefaultTimeAllowance')->value();
-    my $guest_pass_file =
-      $c->model('DB::Setting')->find('GuestPassFile')->value();
-    my $current_guest_number_setting =
-      $c->model('DB::Setting')->find('CurrentGuestNumber');
-
-    my $current_guest_number = $current_guest_number_setting->value();
-
-    $current_guest_number++;
-
-    my $file_contents = q{};
-
-    $file_contents .= "\n\n\n";
-
-    for ( my $i = 0 ; $i < $guest_count ; $i++ ) {
-
-        $current_guest_number = $current_guest_number + 1;
-        my $username = "guest" . $current_guest_number;
-        my $password =
-          random_string("nnnn");    #TODO: Make the pattern a system setting
-
-        my $user = $c->model('DB::User')->create(
-            {
-                username          => $username,
-                password          => $password,
-                minutes_allotment => $minutes,
-                status            => 'enabled',
-                is_guest          => 'Yes'
-            }
-        );
-
-        $file_contents .= $batch_guest_pass_username_label . $username . "\n\n";
-        $file_contents .= $batch_guest_pass_password_label . $password . "\n";
-        $file_contents .= "\n\n\n";
-
-        $success = $success + 1 if ($user);
-    }
-
-    open( my $fh_guest, '>', $guest_pass_file );
-    print $fh_guest $file_contents;
-    close $fh_guest;
-
-    $current_guest_number_setting->value($current_guest_number);
-    $current_guest_number_setting->update();
-
-    $c->stash(
-        'success'  => $success,
-        'highest'  => $current_guest_number,
-        'number'   => $guest_count,
-        'minutes'  => $minutes,
-        'contents' => $file_contents,
-    );
-
     $c->forward( $c->view('JSON') );
 }
 
@@ -330,6 +256,7 @@ sub change_password : Local : Args(0) {
     $c->stash( 'success' => $success );
     $c->forward( $c->view('JSON') );
 }
+
 
 =head1 AUTHOR
 
