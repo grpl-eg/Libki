@@ -125,6 +125,7 @@ $(document).ready(function() {
             }
         },
         "fnServerData": function ( sSource, aoData, fnCallback ) {
+	    window.location_filter = getQueryVariable('loc');
             if ( window.location_filter ) {
                 aoData.push( { "name": "location_filter", "value": window.location_filter } );
             }
@@ -346,6 +347,17 @@ $(document).ready(function() {
 /*********** Helper Functions ***********/
 function ForceClientTableRefresh() {
      $("#client-table").dataTable().fnDraw(true);
+}
+
+function getQueryVariable(variable)
+{
+       var query = window.location.search.substring(1);
+       var vars = query.split("&");
+       for (var i=0;i<vars.length;i++) {
+               var pair = vars[i].split("=");
+               if(pair[0] == variable){return pair[1];}
+       }
+       return(false);
 }
 
 </script>
