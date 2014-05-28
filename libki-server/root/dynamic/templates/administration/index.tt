@@ -1,0 +1,771 @@
+[% META title = 'Administration / Home' -%]
+[% SET active_class = 'administration__index' %]
+
+<ul class="nav nav-tabs" id="primary-tabs">
+    <li class="active">
+        <a id="user-tab-label" data-toggle="tab" href="#users-tab">Users</a>
+    </li>
+    <li>
+        <a id="client-tab-label" data-toggle="tab" href="#clients-tab">Clients</a>
+    </li>
+</ul>
+
+
+<div class="tab-content">
+  <div class="tab-pane active" id="users-tab">
+        <table id="user-table" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+            <thead>
+                <th>Username</th>
+                <th>Daily minutes</th>
+                <th>Session minutes</th>
+                <th>Status</th>
+                <th>Message</th>
+                <th>Notes</th>
+                <th>Troublemaker</th>
+                <th>Client</th>
+                <th>Status</th>
+            </thead>
+        </table> 
+
+        <div id="user-table-toolbar" class="table-toolbar float-right btn-group">
+            [% IF !c.config.SIP.enable || c.check_user_roles('superadmin') %]
+                <a href="#" class="new-user-button btn btn-info"><i class="icon-plus icon-white"></i> New user</i></a>
+            [% END %]
+            <a href="#" class="new-guest-button btn btn-primary">New guest <i class="icon-user icon-white"></i></a>
+            <a href="#" class="multi-guest-button btn btn-info">Multiple guests <i class="icon-user icon-white"></i></a>
+        </div>
+
+        <div id="user-table-refresh" class="table-toolbar input-prepend">
+            <span id="user-table-refresh-label" class="add-on">Refresh</span>
+            <button id="user-table-refresh-button" class="btn" type="button"><i class="icon-refresh"></i></button>
+            <!-- <span id="user-table-refresh-counter" class="add-on">30</span> -->
+        </div>
+
+        <div id="user-table-row-toolbar" class="table-row-toolbar btn-group">
+            <button id="user-table-row-toolbar-edit" class="btn btn-inverse"><i class="icon-edit icon-white"></i> Edit</button>
+            [% IF !c.config.SIP.enable || c.check_user_roles('superadmin') %]
+                <button id="user-table-row-toolbar-password" class="btn btn-primary"><i class="icon-retweet icon-white"></i> Password</button>
+            [% END %]
+            <button id="user-table-row-toolbar-troublemaker" class="btn btn-warning"><i class="icon-warning-sign icon-white"></i> Troublemaker</button>
+            <button id="user-table-row-toolbar-delete" class="btn btn-danger" onclick="LibkiDeleteUser( window.selected_id )"><i class="icon-trash icon-white"></i> Delete</button>
+        </div>
+  </div>
+
+  <div class="tab-pane" id="clients-tab">
+    <ul class="nav nav-pills" id="primary-tabs">
+      <li>
+          <a>Locations:</a>
+      </li>
+      <li class="active">
+          <a data-toggle="tab" href="#" onclick="ClientTableUpdateLocationFilter('');">All</a>
+      </li>
+      [% FOREACH location IN locations %]
+          <li>
+              <a data-toggle="tab" href="#" onclick="ClientTableUpdateLocationFilter('[% location %]');">[% location %]</a>
+          </li>
+      [% END %]
+    </ul>
+
+        <table id="client-table" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+            <thead>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Session Status</th>
+                <th>Username</th>
+                <th>Minutes</th>
+                <th>User status</th>
+                <th>Message</th>
+                <th>Notes</th>
+                <th>Troublemaker</th>
+                <th>Reserved</th>
+            </thead>
+        </table> 
+
+        <div id="client-table-toolbar" class="table-toolbar float-right btn-group">
+            [% IF !c.config.SIP.enable || c.check_user_roles('superadmin') %]
+                <a href="#" class="new-user-button btn btn-info"><i class="icon-plus icon-white"></i> New user</i></a>
+            [% END %]
+            <a href="#" class="new-guest-button btn btn-primary">New guest <i class="icon-user icon-white"></i></a>
+            <a href="#" class="multi-guest-button btn btn-info">Multiple guests <i class="icon-user icon-white"></i></a>
+        </div>
+
+        <div id="client-table-refresh" class="table-toolbar input-prepend">
+            <span id="client-table-refresh-label" class="add-on">Refresh</span>
+            <button id="client-table-refresh-button" class="btn" type="button"><i class="icon-refresh"></i></button>
+            <span id="client-table-refresh-counter" class="add-on">30</span>
+        </div>
+
+        <div id="client-table-row-toolbar" class="table-row-toolbar btn-group">
+            <button id="client-table-row-toolbar-time" class="btn btn-inverse"><i class="icon-time icon-white"></i> Modify time</button>
+            <button id="client-table-row-toolbar-logout" class="btn btn-danger" onclick="LibkiLogOutClient( window.selected_id )"><i class="icon-off icon-white"></i> Log out</button>
+        </div>
+  </div>
+</div>
+
+<div class="modal hide" id="new-user-modal" tabindex="-1" role="dialog" aria-labelledby="new-user-modal-label" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="new-user-modal-label">New user</h3>
+    </div>
+    <div class="modal-body">
+        <form id="new-user-modal-form">
+            <div class="control-group">
+                <label>Username</label>
+                <input id="new-user-modal-form-username" name="username" type="text" placeholder="Username">
+                <span class="help-block">Username must be unique.</span>
+            </div>
+
+            <div class="control-group">
+                <label>Password</label>
+                <input id="new-user-modal-form-password" name="password" type="password" placeholder="Enter password">
+                <input id="new-user-modal-form-password-confirm" name="password-confirm" type="password" placeholder="Confirm password">
+                <span class="help-block">Password fields must match.</span>
+            </div>
+
+            <div class="control-group">
+                <label>Minutes</label>
+                <input id="new-user-modal-form-minutes" name="minutes" class="input-mini" type="text" placeholder="[% DefaultTimeAllowance %]">
+                <span class="help-block">Leave unmodified for default amount of time.</span>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button id="new-user-modal-form-submit" class="btn btn-primary">Create user</button>
+    </div>
+</div>
+
+<div class="modal hide" id="new-guest-modal" tabindex="-1" role="dialog" aria-labelledby="new-guest-modal-label" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="new-guest-modal-label">New guest user created</h3>
+    </div>
+    <div class="modal-body">
+        <form id="new-guest-modal-form">
+            <div class="control-group">
+                <label>Username</label>
+                <span id="new-guest-modal-form-username" class="input-xlarge uneditable-input"></span>
+            </div>
+
+            <div class="control-group">
+                <label>Password</label>
+                <span id="new-guest-modal-form-password" class="input-medium uneditable-input"></span>
+            </div>
+
+            <div class="control-group">
+                <label>Minutes</label>
+                <span id="new-guest-modal-form-minutes" class="input-small uneditable-input"></span>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Dismiss</button>
+    </div>
+</div>
+
+<div class="modal hide" id="multi-guest-modal" tabindex="-1" role="dialog" aria-labelledby="multi-guest-modal-label" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="multi-guest-modal-label">New guest batch created</h3>
+    </div>
+    <div class="modal-body">
+        <form id="multi-guest-modal-form">
+            <div class="control-group">
+                <label>Highest Guest Account Created</label>
+                <span id="multi-guest-modal-form-highest" class="input-xlarge uneditable-input"></span>
+            </div>
+
+            <div class="control-group">
+                <label>Number of Accounts Created</label>
+                <span id="multi-guest-modal-form-number" class="input-medium uneditable-input"></span>
+            </div>
+
+            <div class="control-group">
+                <label>Minutes</label>
+                <span id="multi-guest-modal-form-minutes" class="input-small uneditable-input"></span>
+            </div>
+
+            <a href="#" id="multi-guest-modal-form-print" class="btn"><i class="icon-print"></i> View & print guest pass file</a>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Dismiss</button>
+    </div>
+</div>
+
+<div class="modal hide" id="edit-user-modal" tabindex="-1" role="dialog" aria-labelledby="edit-user-modal-label" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="edit-user-modal-label">Edit user</h3>
+
+        <ul class="nav nav-tabs" id="edit-user-modal-tabs">
+            <li class="active">
+                <a data-toggle="tab" href="#edit-user-modal-form-tab-details">Details</a>
+            </li>
+            <li>
+                <a data-toggle="tab" href="#edit-user-modal-form-tab-roles">Roles</a>
+            </li>
+        </ul>
+
+    </div>
+    <div class="modal-body">
+        <form id="edit-user-modal-form">
+
+            <div class="tab-content">
+
+                <div class="tab-pane active" id="edit-user-modal-form-tab-details">
+                    <input id="edit-user-modal-form-id" name="id" type="hidden" />
+
+                    <div class="control-group">
+                        <label>Username</label>
+                        <input id="edit-user-modal-form-username" name="username" type="text" placeholder="Username" disabled>
+                        <span class="help-block">Username must be unique.</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Minutes</label>
+                        <input id="edit-user-modal-form-minutes" name="minutes" class="input-mini" type="text">
+                        <span class="help-block">Leave empty for default amount of time.</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Status</label>
+                        <select id="edit-user-modal-form-status" name="status">
+                            <option value="enabled">Enabled</option>
+                            <option value="disabled">Disabled</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Notes</label>
+                        <textarea id="edit-user-modal-form-notes" name="notes"></textarea>
+                    </div>
+                </div> 
+
+                <div class="tab-pane active" id="edit-user-modal-form-tab-roles">
+                    <label class="checkbox">
+                        <input id="edit-user-modal-form-roles-admin" name="roles" type="checkbox" value="admin">Administrator
+                    </label>
+
+                    <label class="checkbox">
+                        <input id="edit-user-modal-form-roles-superadmin" name="roles" type="checkbox" value="superadmin">Super-Administrator
+                    </label>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button id="edit-user-modal-form-submit" class="btn btn-primary">Update user</button>
+    </div>
+</div>
+
+<div class="modal hide" id="modify-time-modal" tabindex="-1" role="dialog" aria-labelledby="modify-time-modal-label" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="modify-time-modal-label">Modify time</h3>
+    </div>
+    <div class="modal-body">
+        <form id="modify-time-modal-form">
+            <input id="modify-time-modal-form-id" name="id" type="hidden" />
+
+            <div class="control-group">
+                <label>Minutes</label>
+                <input id="modify-time-modal-form-minutes" name="minutes" class="input-mini" type="text">
+                <span class="help-block">Add a <b>+</b> or <b>-</b> sign to increment or decrement the existing amount of time.</span>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button id="modify-time-modal-form-submit" class="btn btn-primary">Update time</button>
+    </div>
+</div>
+
+<div class="modal hide" id="change-password-modal" tabindex="-1" role="dialog" aria-labelledby="change-password-modal-label" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="change-password-modal-label">Change password</h3>
+    </div>
+    <div class="modal-body">
+        <form id="change-password-modal-form">
+            <input id="change-password-modal-form-id" name="id" type="hidden" />
+
+            <div class="control-group">
+                <label>Password</label>
+                <input id="change-password-modal-form-password" name="password" type="password" placeholder="Enter password">
+                <input id="change-password-modal-form-password-confirm" name="password-confirm" type="password" placeholder="Confirm password">
+                <span class="help-block">Password fields must match.</span>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button id="change-password-modal-form-submit" class="btn btn-primary">Update password</button>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    /**** Handle refreshing of tables ****/
+    // Refresh the client table automatically, as its date will go stale quickly
+    clientRefreshCounter = setInterval( function(){HandleClientTableRefreshCounter()}, 1000 );
+
+    // Set up the manual refresh buttons for each table
+    $('#client-table-refresh-button').click( function(){ ForceClientTableRefresh() });
+    $('#user-table-refresh-button').click( function(){ ForceUserTableRefresh() });
+
+    // When we switch tabs, refresh the new tab automatically
+    $('#user-tab-label').click( function(){ ForceUserTableRefresh() });
+    $('#client-tab-label').click( function(){ ForceClientTableRefresh() });
+
+    /**** Initialize Datatables ****/
+    // Initalize the Users table as a datatable
+    uTable = $('#user-table').dataTable( {
+        "bProcessing": true,  // Indicate when the table is processing data
+        "bServerSide": true,  // Indicate that the datatable gets data from a
+                              // HTTP GET request
+        "sDom": "<'row'<'span6'l><'span6 float-right'f>r>t<'row'<'span6'i><'span6'p>>",
+        "sAjaxSource": "[% c.uri_for('/administration/api/datatables/users') %]",  // The actual URL to call for data
+        "sPaginationType": "bootstrap",
+        "fnDrawCallback": function(oSettings, json) {
+            AddTableRowToolbar( $('#user-table-row-toolbar'), $('#user-table'), $('#user-table tbody tr') );
+        },
+        "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+            [% IF Settings.ThirdPartyURL %]
+                $('td:eq(0)', nRow).html( '<a target="_blank" href="[% Settings.ThirdPartyURL %]' + aData[0] + '">' + aData[0] + '</b>' );
+            [% END %]
+        },
+    } );
+
+    $('#user-table-toolbar').prependTo($('#user-table_filter'));
+    $('#user-table-refresh').prependTo($('#user-table_length'));
+     
+    /* Add a click handler to the rows */
+    $("#user-table tbody").click(function(event) {
+        // Clear selection from any existing rows
+        $(uTable.fnSettings().aoData).each(function (){
+            $(this.nTr).removeClass('row_selected');
+        });
+
+        // Set the class for the selected row
+        $(event.target.parentNode).addClass('row_selected');
+    });
+
+    // Initalize the Clients table as a datatable
+    cTable = $('#client-table').dataTable( {
+        "bProcessing": true,  // Indicate when the table is processing data
+        "bServerSide": true,  // Indicate that the datatable gets data from a
+                              // HTTP GET request
+        "sDom": "<'row'<'span6'l><'span6 float-right'f>r>t<'row'<'span6'i><'span6'p>>",
+        "sAjaxSource": "[% c.uri_for('/administration/api/datatables/clients') %]",  // The actual URL to call for data
+        "sPaginationType": "bootstrap",
+        "fnDrawCallback": function(oSettings, json) {
+            AddTableRowToolbar( $('#client-table-row-toolbar'), $('#client-table'), $('#client-table tbody tr') );
+        },
+        "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+            [% IF Settings.ThirdPartyURL %]
+                if ( aData[3] ) {
+                    $('td:eq(3)', nRow).html( '<a target="_blank" href="[% Settings.ThirdPartyURL %]' + aData[3] + '">' + aData[3] + '</b>' );
+                }
+            [% END %]
+        },
+        "fnServerData": function ( sSource, aoData, fnCallback ) {
+            if ( window.location_filter ) {
+                aoData.push( { "name": "location_filter", "value": window.location_filter } );
+            }
+
+            $.getJSON( sSource, aoData, function (json) { 
+                fnCallback(json)
+            } );
+        },
+        "aoColumnDefs": [
+            [% UNLESS Settings.ClientBehavior.match("RES") # Setting supports reservations %]
+                { "bVisible": false, "aTargets": [ 9 ] },
+            [% END %]
+        ],
+
+    } );
+
+    $('#client-table-toolbar').prependTo($('#client-table_filter'));
+    $('#client-table-refresh').prependTo($('#client-table_length'));
+
+    /* Add a click handler to the rows */
+    $("#client-table tbody").click(function(event) {
+        // Clear selection from any existing rows
+        $(cTable.fnSettings().aoData).each(function (){
+            $(this.nTr).removeClass('row_selected');
+        });
+
+        // Set the class for the selected row
+        $(event.target.parentNode).addClass('row_selected');
+    });
+
+    /*********** Page Wide Actions ***********/
+    // Set up the 'new user' button
+    $('.new-user-button').click(function(){
+        $('#user-table-row-toolbar').hide();
+        $('#client-table-row-toolbar').hide();
+
+        $('#new-user-modal-form-username').val('');
+        $('#new-user-modal-form-username').parent().removeClass('success warning error');
+
+        $('#new-user-modal-form-password').val('');
+        $('#new-user-modal-form-password-confirm').val('');
+
+        $('#new-user-modal-form-minutes').val('')
+
+        $('#new-user-modal-form-submit').removeAttr('disabled');
+
+        $('#new-user-modal').modal();
+        $('#new-user-modal-form-username').focus();
+
+    });
+
+    // When a username is entered in the new user form, we need to check it for uniqueness
+    $('#new-user-modal-form-username').blur(function(){
+        $.getJSON('[% c.uri_for("api/user/is_username_unique") %]/' + $(this).val(), function(data) {
+            if ( parseInt( data.is_unique ) ) {
+                $('#new-user-modal-form-submit').removeAttr('disabled');
+                $('#new-user-modal-form-username').parent().removeClass('warning error');
+                $('#new-user-modal-form-username').parent().addClass('success');
+            } else {
+                $('#new-user-modal-form-username').parent().removeClass('success error');
+                $('#new-user-modal-form-username').parent().addClass('warning');
+                $('#new-user-modal-form-submit').attr('disabled','disabled');
+            }
+        });
+    });
+
+    // Handle the new user form submission
+    $('#new-user-modal-form-submit').click(function(){
+        $('#new-user-modal-form-username').parent().removeClass('success warning error');
+        $('#new-user-modal-form-password').parent().removeClass('success warning error');
+
+        var no_errors = true;
+        if ( ! $('#new-user-modal-form-username').val() ) {
+            $('#new-user-modal-form-username').parent().addClass('error');
+            no_errors = false;
+        }
+        if ( $('#new-user-modal-form-password').val() != $('#new-user-modal-form-password-confirm').val() ) {
+            $('#new-user-modal-form-password').parent().addClass('error');
+            no_errors = false;
+        }
+        if ( $('#new-user-modal-form-minutes').val() ) {
+            if ( isNaN( $('#new-user-modal-form-minutes').val() ) ) {
+                $('#new-user-modal-form-minutes').parent().addClass('error');
+                no_errors = false;
+            }
+        }
+
+        if ( no_errors ) {
+            $('#new-user-modal-form-submit').attr('disabled','disabled');
+
+            $.post('[% c.uri_for("api/user/create") %]', $('#new-user-modal-form').serialize(), function(data) {
+                $('#new-user-modal').modal('hide');
+
+                if ( data.success ) {
+                    DisplayMessage( 'success', 'User created!' );
+                    $("#user-table").dataTable().fnDraw(true);
+                } else {
+                    DisplayMessage( 'error', 'User not created!' );
+                }
+            });
+        }
+    });
+
+    // Set up the 'new guest' button
+    $('.new-guest-button').click(function(){
+        $.getJSON('[% c.uri_for("api/user/create_guest") %]/', function(data) {
+            if ( parseInt( data.success ) ) {
+                $("#user-table").dataTable().fnDraw(true);
+                ForceClientTableRefresh();
+
+                $('#user-table-row-toolbar').hide();
+                $('#client-table-row-toolbar').hide();
+
+                $('#new-guest-modal-form-username').text( data.username );
+                $('#new-guest-modal-form-password').text( data.password );
+                $('#new-guest-modal-form-minutes').text( data.minutes );
+
+                $('#new-guest-modal').modal();
+            } else {
+                DisplayMessage( 'error', "Unable to create guest user!" );
+            }
+        });
+    });
+
+    // Set up the 'multi guest' button
+    $('.multi-guest-button').click(function(){
+        $.getJSON('[% c.uri_for("api/user/batch_create_guest") %]/', function(data) {
+            if ( parseInt( data.success ) ) {
+                $("#user-table").dataTable().fnDraw(true);
+                ForceClientTableRefresh();
+
+                $('#user-table-row-toolbar').hide();
+                $('#client-table-row-toolbar').hide();
+
+                $('#multi-guest-modal-form-highest').text( data.highest );
+                $('#multi-guest-modal-form-number').text( data.number );
+                $('#multi-guest-modal-form-minutes').text( data.minutes );
+
+                guest_pass_file_contents = data.contents;
+
+                $('#multi-guest-modal').modal();
+            } else {
+                DisplayMessage( 'error', "Unable to create guest user!" );
+            }
+        });
+    });
+    $('#multi-guest-modal-form-print').click(function(){
+        var guestPassWindow = window.open();
+        guestPassWindow.document.write("<pre>" + guest_pass_file_contents + "</pre>");
+    });
+
+
+    /*********** Users Table ***********/
+    /* Edit User */
+    // Set up the 'edit user' button
+    $('#user-table-row-toolbar-edit').click(function(){
+        $('#user-table-row-toolbar').hide();
+
+        $('#edit-user-modal-form-submit').removeAttr('disabled');
+        $('#edit-user-modal-form-username').parent().removeClass('success warning error');
+
+        $('#edit-user-modal-form-roles-admin').attr('checked', false);
+        $('#edit-user-modal-form-roles-superadmin').attr('checked', false);
+
+        $.getJSON('[% c.uri_for("api/user/get") %]/' + window.selected_id, function(data) {
+            $('#edit-user-modal-form-username').val( data.username );
+            $('#edit-user-modal-form-minutes').val( data.minutes );
+            $('#edit-user-modal-form-status').val( data.status );
+            $('#edit-user-modal-form-notes').val( data.notes );
+            $('#edit-user-modal-form-id').val( data.id );
+            for ( var i in data.roles ) {
+                $('#edit-user-modal-form-roles-' + data.roles[i]).attr('checked', true);
+            }
+        });
+
+        [% UNLESS c.check_user_roles('superadmin') %]
+            $('#edit-user-modal-form-roles-admin').attr('disabled', true);
+            $('#edit-user-modal-form-roles-superadmin').attr('disabled', true);
+        [% END %]
+
+        // Always start on first tab ( i.e. details tab )
+        $('#edit-user-modal-tabs a:last').tab('show'); // Fixes display bug where both tabs content shows on first tab.
+        $('#edit-user-modal-tabs a:first').tab('show');
+
+        $('#edit-user-modal').modal();
+    });
+
+    // Handle the edit user form submission
+    $('#edit-user-modal-form-submit').click(function(){
+        var no_errors = true;
+
+        if ( $('#edit-user-modal-form-minutes').val() ) {
+            if ( isNaN( $('#edit-user-modal-form-minutes').val() ) ) {
+                $('#edit-user-modal-form-minutes').parent().addClass('error');
+                no_errors = false;
+            }
+        }
+
+        if ( no_errors ) {
+            $('#edit-user-modal-form-submit').attr('disabled','disabled');
+
+            $.post('[% c.uri_for("api/user/update") %]', $('#edit-user-modal-form').serialize(), function(data) {
+                $('#edit-user-modal').modal('hide');
+
+                if ( data.success ) {
+                    DisplayMessage( 'success', 'User updated!' );
+                    $("#user-table").dataTable().fnDraw(true);
+                } else {
+                    DisplayMessage( 'error', 'User not updated!' );
+                }
+            });
+        }
+    });
+
+    /* Modify Password */
+    $('#user-table-row-toolbar-password').click(function(){
+        $('#user-table-row-toolbar').hide();
+
+        $('#change-password-modal-form-id').val('');
+
+        $('#change-password-modal-form-password').parent().removeClass('success warning error');
+        $('#change-password-modal-form-password').val('');
+        $('#change-password-modal-form-password-confirm').val('');
+
+        $('#change-password-modal-form-submit').removeAttr('disabled');
+
+        $('#change-password-modal').modal();
+    });
+
+    $('#change-password-modal-form-submit').click(function(){
+        $('#change-password-modal-form-id').val( window.selected_id );
+
+        var no_errors = true;
+
+        if ( $('#change-password-modal-form-password').val() != $('#change-password-modal-form-password-confirm').val() ) {
+            $('#change-password-modal-form-password').parent().addClass('error');
+            no_errors = false;
+        }
+
+        if ( no_errors ) {
+            $('#change-password-modal-form-submit').attr('disabled','disabled');
+
+            $.post('[% c.uri_for("api/user/change_password") %]', $('#change-password-modal-form').serialize(), function(data) {
+                $('#change-password-modal').modal('hide');
+
+                if ( data.success ) {
+                    DisplayMessage( 'success', 'Password updated!' );
+                    $("#user-table").dataTable().fnDraw(true);
+                } else {
+                    DisplayMessage( 'error', 'Password not updated!' );
+                }
+            });
+        }
+    });
+
+    /* Toggle troublemaker */
+    $('#user-table-row-toolbar-troublemaker').click(function(){
+        $.getJSON('[% c.uri_for("api/user/toggle_troublemaker") %]/' + window.selected_id, function(data) {
+            if ( parseInt( data.success ) ) {
+                    DisplayMessage( 'success', "Troublemaker status switched!" );
+                    $("#user-table").dataTable().fnDraw(true);
+            } else {
+                    DisplayMessage( 'error', "Troublemaker status not switched!" );
+            }
+        });
+    });
+
+    /*********** Client Table ***********/
+    /* Modify Time */
+    $('#modify-time-modal-form-submit').click(function(){
+        var errors = false;
+
+        if ( $('#modify-time-modal-form-minutes').val() ) {
+            if ( isNaN( $('#modify-time-modal-form-minutes').val() ) ) {
+                errors = true;
+            }
+        } else {
+            errors = true;
+        }
+
+        if ( errors ) {
+            $('#modify-time-modal-form-minutes').parent().addClass('error');
+        } else {
+            $('#modify-time-modal-form-submit').attr('disabled','disabled');
+
+            $.post('[% c.uri_for("api/client/modify_time") %]', $('#modify-time-modal-form').serialize(), function(data) {
+                $('#modify-time-modal').modal('hide');
+
+                if ( data.success ) {
+                    DisplayMessage( 'success', "User's time updated!" );
+                    ForceClientTableRefresh();
+                } else {
+                    DisplayMessage( 'error', "User's time not updated!" );
+                }
+            });
+        }
+    });
+
+    $("#modify-time-modal-form-minutes").keypress(function(e){
+        if (e.which == 13) {
+            e.preventDefault();
+            $('#modify-time-modal-form-submit').click();
+        }
+    });
+
+    $('#client-table-row-toolbar-time').click(function(){
+        $('#client-table-row-toolbar').hide();
+
+        $('#modify-time-modal-form-id').val( window.selected_id );
+
+        $('#modify-time-modal-form-minutes').val('');
+        $('#modify-time-modal-form-minutes').parent().removeClass('success warning error');
+
+        $('#modify-time-modal').modal();
+        $('#modify-time-modal-form-minutes').focus();
+
+        $('#modify-time-modal-form-submit').removeAttr('disabled');
+    });
+
+});
+
+/*********** Helper Functions ***********/
+
+// Add a filter for a specific column
+function filter_woo() {
+    var t = $('#user-table').dataTable();
+
+    // In this case, only search if the <input> value is long enough (stops
+    // stupid searches on single chars)
+    if ( $('#filter_woo').val().length > 3 ) {
+        t.fnFilter($('#filter_woo').val(),0);
+    }
+    else {
+        t.fnFilter('',0);
+    };
+}
+
+function LibkiDeleteUser( id ) {
+  if ( confirm("Are you sure you want to delete this user?") ) {
+    $.getJSON( '[% c.uri_for('/administration/api/user/delete') %]' + '/' + id, function() {})
+     .success(function(data, textStatus, jqXHR) { 
+         if ( data.success ) {
+             DisplayMessage( 'success', 'User deleted!' );
+             // Refresh the table to remove the deleted row
+             $("#user-table").dataTable().fnDraw(true);
+         } else {
+             DisplayMessage( 'error', 'User not deleted!' );
+         }
+     })
+     .error(function() { })
+     .complete(function() { });
+  }
+}
+
+function LibkiLogOutClient( id ) {
+  if ( confirm("Are you sure you want to log this user out?") ) {
+    $.getJSON( '[% c.uri_for('/administration/api/client/logout') %]' + '/' + id, function() {})
+     .success(function(data, textStatus, jqXHR) { 
+         if ( data.success ) {
+             DisplayMessage( 'success', 'Log out suceeded!' );
+             // Refresh the table to remove the deleted row
+             $("#client-table").dataTable().fnDraw(true);
+         } else {
+             DisplayMessage( 'error', 'Log out failed!' );
+         }
+     })
+     .error(function() { })
+     .complete(function() { });
+  }
+}
+
+function HandleClientTableRefreshCounter() {
+    var countdown = parseInt( $('#client-table-refresh-counter').text() ) - 1;
+
+    if ( countdown ) {
+        $('#client-table-refresh-counter').text( countdown );
+    } else {
+        ForceClientTableRefresh();
+    }
+}
+
+function ClientTableUpdateLocationFilter( location ) {
+    window.location_filter = location;
+    ForceClientTableRefresh();
+}
+
+function ForceClientTableRefresh() {
+     $("#client-table").dataTable().fnDraw(true);
+     $('#client-table-refresh-counter').text( '30' );
+}
+
+function ForceUserTableRefresh() {
+     $("#user-table").dataTable().fnDraw(true);
+}
+
+</script>

@@ -1,0 +1,50 @@
+.row {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.float-right {
+    float: right;
+}
+
+.float-left {
+    float: left;
+}
+
+.display-none {
+    display: none;
+}
+
+form .required {
+    font-weight: bold;
+}
+
+.libki-message {
+    z-index:  999999;
+    position: absolute;
+    width: 50%;
+}
+
+.table-row-toolbar {
+    display: none;
+    z-index: 9999;
+    float: left;
+}
+
+.table-toolbar {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+/* 'Group' headers for grouping results in DataTables */
+td.group {
+	background-color: #d1cfd0 !important;
+	border-bottom: 2px solid #A19B9E;
+	border-top: 2px solid #A19B9E;
+        text-align: left;
+        font-weight: bold;
+}
