@@ -47,29 +47,13 @@
        <widget class="QLabel" name="headerLabel">
         <property name="font">
          <font>
-          <pointsize>18</pointsize>
+          <pointsize>23</pointsize>
           <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
         <property name="text">
          <string>Internet Kiosk</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="logo">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="pixmap">
-         <pixmap resource="libki.qrc">:/images/images/libki.png</pixmap>
-        </property>
-        <property name="scaledContents">
-         <bool>false</bool>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -92,6 +76,22 @@
          </spacer>
         </item>
         <item>
+         <widget class="QLabel" name="logo">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap resource="libki.qrc">:/images/images/GRPL-home-logo.png</pixmap>
+          </property>
+          <property name="scaledContents">
+           <bool>false</bool>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
            <widget class="QLabel" name="reservedLabel">
@@ -101,7 +101,7 @@
             <property name="font">
              <font>
               <family>Bitstream Charter</family>
-              <pointsize>18</pointsize>
+              <pointsize>20</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
@@ -136,6 +136,11 @@
           </item>
           <item>
            <widget class="QLabel" name="messageLabel">
+            <property name="font">
+             <font>
+              <pointsize>13</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>Please Log In.</string>
             </property>
@@ -163,7 +168,16 @@
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <property name="margin">
+        <property name="leftMargin">
+         <number>10</number>
+        </property>
+        <property name="topMargin">
+         <number>10</number>
+        </property>
+        <property name="rightMargin">
+         <number>10</number>
+        </property>
+        <property name="bottomMargin">
          <number>10</number>
         </property>
         <item>
@@ -187,13 +201,22 @@
           <property name="labelAlignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
-          <property name="margin">
+          <property name="leftMargin">
+           <number>20</number>
+          </property>
+          <property name="topMargin">
+           <number>20</number>
+          </property>
+          <property name="rightMargin">
+           <number>20</number>
+          </property>
+          <property name="bottomMargin">
            <number>20</number>
           </property>
           <item row="0" column="0">
            <widget class="QLabel" name="usernameLabel">
             <property name="text">
-             <string>Username:</string>
+             <string>Username/Barcode:</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -209,7 +232,7 @@
           <item row="1" column="0">
            <widget class="QLabel" name="passwordLabel">
             <property name="text">
-             <string>Password:</string>
+             <string>Password/PIN:</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -228,6 +251,11 @@
           </item>
           <item row="2" column="0">
            <widget class="QPushButton" name="cancelButton">
+            <property name="font">
+             <font>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>Cancel</string>
             </property>
@@ -318,7 +346,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QWebView" name="bannerWebViewBottom">
+       <widget class="QWebView" name="bannerWebViewBottom" native="true">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -337,7 +365,7 @@
         <property name="acceptDrops">
          <bool>false</bool>
         </property>
-        <property name="url">
+        <property name="url" stdset="0">
          <url>
           <string>about:blank</string>
          </url>
@@ -375,7 +403,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QWebView" name="bannerWebViewTop">
+       <widget class="QWebView" name="bannerWebViewTop" native="true">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -403,7 +431,7 @@
         <property name="acceptDrops">
          <bool>false</bool>
         </property>
-        <property name="url">
+        <property name="url" stdset="0">
          <url>
           <string>about:blank</string>
          </url>
@@ -433,7 +461,7 @@
      <x>0</x>
      <y>0</y>
      <width>857</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>

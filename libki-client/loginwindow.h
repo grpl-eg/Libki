@@ -60,6 +60,7 @@ private:
     QIcon libkiIcon;
 
     QString reservedFor;
+    QString scriptFile;
 
     bool allowClose;
     bool isHidden;
