@@ -3,6 +3,7 @@
         <file>images/libki.png</file>
         <file>images/libki_clock.png</file>
         <file>images/padlock.png</file>
+        <file>images/GRPL-home-logo.png</file>
     </qresource>
     <qresource prefix="/icons">
         <file>images/icons/lock.svg</file>
