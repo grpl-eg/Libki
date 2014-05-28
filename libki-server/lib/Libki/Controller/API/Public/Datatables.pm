@@ -26,7 +26,7 @@ sub clients : Local Args(0) {
     my ( $self, $c ) = @_;
 
     # We need to map the table columns to field names for ordering
-    my @columns = qw/ me.name me.location session.status user.minutes /;
+    my @columns = qw/ me.location me.name session.status user.minutes /;
 
     # Set up filters
     my $filter = {};
@@ -82,7 +82,7 @@ sub clients : Local Args(0) {
         $r->{'1'}        = $c->location;
         $r->{'2'}        = defined( $c->session ) ? $c->session->status : undef;
         $r->{'3'} = defined( $c->session ) ? $c->session->user->minutes : undef;
-        $r->{'4'} = defined( $c->reservation ) ? $c->reservation->user->username : undef;
+        $r->{'4'} = defined( $c->reservation ) ? '....'.substr $c->reservation->user->username,-4 : undef;
 
         push( @results, $r );
     }
