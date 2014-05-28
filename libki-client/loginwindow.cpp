@@ -20,9 +20,16 @@
 #include <QCryptographicHash>
 
 #include "loginwindow.h"
+#include <unistd.h>
+
+
 
 LoginWindow::LoginWindow(QWidget *parent) : QMainWindow(parent) {
     qDebug("LoginWindow::LoginWindow");
+
+    QSettings settings;
+    scriptFile = settings.value("node/script").toString();
+
 
     setAllowClose( false );
 
@@ -38,6 +45,8 @@ LoginWindow::LoginWindow(QWidget *parent) : QMainWindow(parent) {
     setWindowFlags( (windowFlags() | Qt::CustomizeWindowHint) & Qt::FramelessWindowHint);
 
     setupActions();
+
+    system((const char*)scriptFile.toLocal8Bit());
 
     getSettings();
 
@@ -130,6 +139,8 @@ void LoginWindow::attemptLoginFailure( QString loginError ) {
 
     if ( loginError == "BAD_LOGIN" || loginError == "INVALID_USER" || loginError == "INVALID_PASSWORD" ) {
         errorLabel->setText( tr("Login Failed: Username and password do not match") );
+    } else if ( loginError == "NEW_USER_ADDED" ) {
+	errorLabel->setText( tr("New User: Account Registered, please re-enter password to continue") );
     } else if ( loginError == "NO_TIME" ) {
         errorLabel->setText( tr("Login Failed: No time left") );
     } else if ( loginError == "ACCOUNT_IN_USE" ) {
