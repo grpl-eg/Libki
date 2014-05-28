@@ -29,8 +29,18 @@ my $schema = Libki::Schema::DB->connect($connect_info)
 my $session_rs = $schema->resultset('Session');
 while ( my $session = $session_rs->next() ) {
     if ( $session->user->minutes() > 0 ) {
-        $session->user->decrease_minutes(1);
-        $session->user->update();
+
+	if  ($session->user->minutes() == 5) {  #GRPL - if we're in our final 5 minutes, see if there are waiting reservations
+	    if ($schema->resultset('Reservation')->search( { client_id => $session->client->id } )->next() ) { 
+        	$session->user->decrease_minutes(1);
+        	$session->user->update();
+	    }else{ # if no reservations, let the last 5 minutes linger
+		next;
+	    }
+	}else{
+		$session->user->decrease_minutes(1);
+                $session->user->update();
+	}
     }
     else {
         ## If somehow a session exists with
@@ -47,6 +57,8 @@ while ( my $session = $session_rs->next() ) {
         );
 
         $session->delete();
+	
+	# GRPL - put an ssh call here to handle any iptables issues on ISM
     }
 }
 
