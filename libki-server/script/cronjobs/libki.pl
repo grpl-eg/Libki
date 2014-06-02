@@ -29,8 +29,8 @@ my $schema = Libki::Schema::DB->connect($connect_info)
 my $session_rs = $schema->resultset('Session');
 while ( my $session = $session_rs->next() ) {
     if ( $session->user->minutes() > 0 ) {
-
-	if  ($session->user->minutes() == 5) {  #GRPL - if we're in our final 5 minutes, see if there are waiting reservations
+	my $ttc = timeToClose($session);
+	if  ( ($session->user->minutes() == 5) && ($ttc > 5) ){  #GRPL - if we're in our final 5 minutes, see if there are waiting reservations
 	    if ($schema->resultset('Reservation')->search( { client_id => $session->client->id } )->next() ) { 
         	$session->user->decrease_minutes(1);
         	$session->user->update();
@@ -111,6 +111,21 @@ while ( my $user = $users_rs->next() ) {
         $user->update();
     }
 }
+
+sub timeToClose()
+{
+my $sess=shift;
+my $loc = $sess->client->location;
+use DBI;
+my $dbh=DBI->connect("dbi:mysql:libki","user","password");
+my $sth=$dbh->prepare("select time_to_sec(timediff( (select close_time from closing_times where location=? and dow=dayofweek(now()) ), time(now()) ))/60");
+$sth->execute($loc);
+my $row = $sth->fetch;
+
+return $$row[0];
+}
+
+
 
 =head1 AUTHOR
 
