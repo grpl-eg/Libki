@@ -19,6 +19,7 @@
 
 #include <QtWidgets/qdesktopwidget.h>
 #include "timerwindow.h"
+#include <unistd.h>
 
 TimerWindow::TimerWindow(QWidget *parent) : QMainWindow(parent) {
     qDebug("TimerWindow::TimerWindow");
@@ -183,10 +184,14 @@ void TimerWindow::showSystemTrayIconTimeLeftMessage(){
     QString title = tr("Time Remaining");
     QString message = QString::number(minutesRemaining) + " " + tr("Minutes Left");
 
+    QSettings settings;
+    int popupDelay = settings.value("node/popup").toInt();
+
+
     if ( !(minutesRemaining % 5) ){
-        trayIcon->showMessage( title, message , QSystemTrayIcon::Information, 1000 );
+        trayIcon->showMessage( title, message , QSystemTrayIcon::Information, popupDelay );
     } else if ( minutesRemaining <= 5 ) {
-        trayIcon->showMessage( title, message , QSystemTrayIcon::Warning, 1000 );
+        trayIcon->showMessage( title, message , QSystemTrayIcon::Warning, popupDelay );
     }
 }
 
