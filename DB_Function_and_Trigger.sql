@@ -36,3 +36,11 @@ BEGIN
 END;
 $$
 
+
+CREATE TABLE `closing_times` (
+  `id` int(11) NOT NULL DEFAULT '0',
+  `location` varchar(20) DEFAULT NULL,
+  `dow` int(11) DEFAULT NULL,
+  `close_time` time NOT NULL DEFAULT '00:00:00',
+  PRIMARY KEY (`id`)
+);
