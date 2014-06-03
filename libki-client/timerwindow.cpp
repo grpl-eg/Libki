@@ -33,6 +33,7 @@ TimerWindow::TimerWindow(QWidget *parent) : QMainWindow(parent) {
     this->setWindowIcon(libkiIcon);
 
     setFixedSize(width(), height()); // Prevent the window from being resized
+    setWindowFlags( (windowFlags() | Qt::CustomizeWindowHint) & ~Qt::WindowMinimizeButtonHint); // Remove the minimize window button
     setWindowFlags( (windowFlags() | Qt::CustomizeWindowHint) & ~Qt::WindowMaximizeButtonHint); // Remove the maximize window button
     setWindowFlags( (windowFlags() | Qt::CustomizeWindowHint) & ~Qt::WindowSystemMenuHint); // Remove the close window button
 
