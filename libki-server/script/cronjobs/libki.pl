@@ -7,6 +7,7 @@ use Env;
 use Config::JFDI;
 use DateTime::Format::MySQL;
 use DateTime;
+use DBI;
 
 use FindBin;
 use lib "$FindBin::Bin/../../lib";
@@ -30,12 +31,19 @@ my $session_rs = $schema->resultset('Session');
 while ( my $session = $session_rs->next() ) {
     if ( $session->user->minutes() > 0 ) {
 	my $ttc = timeToClose($session);
-	if  ( ($session->user->minutes() == 5) && ($ttc > 5) ){  #GRPL - if we're in our final 5 minutes, see if there are waiting reservations
+	if  ( ($session->user->minutes() == 5) && ($ttc > 5) && ($session->user->username() !~ /^555/) ){  #GRPL - if we're in our final 5 minutes, see if there are waiting reservations
 	    if ($schema->resultset('Reservation')->search( { client_id => $session->client->id } )->next() ) { 
         	$session->user->decrease_minutes(1);
         	$session->user->update();
-	    }else{ # if no reservations, let the last 5 minutes linger
-		next;
+	    }else{ # if no reservations, see if the user has been around for 2 hours yet
+		# if minutes since last LOGIN >= 115 minutes then decrease_minutes(1);
+		my $length = timeSinceLogin($session);
+		if ($length >= 115){
+			$session->user->decrease_minutes(1);
+			$session->user->update();
+		  }else{
+			next;
+		}
 	    }
 	}else{
 		$session->user->decrease_minutes(1);
@@ -58,7 +66,6 @@ while ( my $session = $session_rs->next() ) {
 
         $session->delete();
 	
-	# GRPL - put an ssh call here to handle any iptables issues on ISM
     }
 }
 
@@ -116,10 +123,21 @@ sub timeToClose()
 {
 my $sess=shift;
 my $loc = $sess->client->location;
-use DBI;
 my $dbh=DBI->connect("dbi:mysql:libki","user","password");
 my $sth=$dbh->prepare("select time_to_sec(timediff( (select close_time from closing_times where location=? and dow=dayofweek(now()) ), time(now()) ))/60");
 $sth->execute($loc);
+my $row = $sth->fetch;
+
+return $$row[0];
+}
+
+sub timeSinceLogin()
+{
+my $sess=shift;
+my $usr = $sess->user->username();
+my $dbh=DBI->connect("dbi:mysql:libki","user","password");
+my $sth=$dbh->prepare("SELECT TIMESTAMPDIFF(MINUTE,max(`when`),now()) FROM statistics WHERE action='LOGIN' AND username=?");
+$sth->execute($usr);
 my $row = $sth->fetch;
 
 return $$row[0];
