@@ -81,6 +81,17 @@ sub create : Local : Args(0) {
                 ->create( { user_id => $user->id(), client_id => $client_id } )
               )
             {
+# Record reservation in statistics table
+#        my $schema->resultset('Statistic')->create(
+		$c->model('DB::Statistic')->create(
+            {
+                username    => $username,
+                client_name => $client_id,
+                action      => 'RESERVATION',
+                when =>
+                  DateTime::Format::MySQL->format_datetime( DateTime->now() ),
+            }
+        );
                 $c->stash( 'success' => 1 );
             } else {
                 $c->stash( 'success' => 0, 'reason' => 'UNKNOWN' );
@@ -141,6 +152,17 @@ sub delete : Local : Args(0) {
             ->search( { user_id => $user->id(), client_id => $client_id } )
             ->next()->delete() )
         {
+# Record reservation delete in statistics table
+#        my $schema->resultset('Statistic')->create(
+                $c->model('DB::Statistic')->create(
+            {
+               username    => $user->username,
+               client_name => $client_id,
+               action      => 'RESERVATION_DELETED',
+               when =>
+                  DateTime::Format::MySQL->format_datetime( DateTime->now() ),
+            }
+        );
             $c->stash( 'success' => 1, );
         }
         else {

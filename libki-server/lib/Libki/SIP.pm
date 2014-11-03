@@ -6,15 +6,15 @@ use LWP::UserAgent;
 use XML::Simple;
 
 sub authenticate_via_sip {
-    my ( $c, $user, $username, $password ) = @_;
+    my ( $c, $client, $username, $password ) = @_;
 
         my $name;
 	my %patronapi;
 
         ## III PATRONAPI
         my $ua=LWP::UserAgent->new();
-        $ua->timeout(20);
-        my $authn_url = "http://catalog.grpl.org/cgi-bin/papupass.cgi?barcode=$username&password=$password";
+        $ua->timeout(40);
+        my $authn_url = "http://catalog.grpl.org/cgi-bin/papupass.cgi?barcode=$username&password=$password&client=$client";
         my $res=$ua->get($authn_url);
         if ($res->is_success) {
                 my $c = $res->content;
