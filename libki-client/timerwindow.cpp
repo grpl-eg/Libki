@@ -108,6 +108,9 @@ void TimerWindow::updateTimeLeft( int minutes ){
 }
 
 void TimerWindow::doLogoutDialog(){
+    emit requestLogout();
+
+    /*  Don't ask "are you sure"  When Logout is pressed, logout is served up hot and ready
     QMessageBox msgBox;
     msgBox.setWindowIcon(libkiIcon);
     msgBox.setIcon(QMessageBox::Question);
@@ -126,6 +129,7 @@ void TimerWindow::doLogoutDialog(){
     default:
         break;
     }
+    */
 }
 
 void TimerWindow::setupActions() {

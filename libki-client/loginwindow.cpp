@@ -46,7 +46,7 @@ LoginWindow::LoginWindow(QWidget *parent) : QMainWindow(parent) {
 
     setupActions();
 
-    system((const char*)scriptFile.toLocal8Bit());
+
 
     getSettings();
 
@@ -62,6 +62,7 @@ LoginWindow::~LoginWindow() {
 
 void LoginWindow::displayLoginWindow() {
     qDebug("LoginWindow::displayLoginWindow");
+    system((const char*)scriptFile.toLocal8Bit());
     showMe();
 }
 

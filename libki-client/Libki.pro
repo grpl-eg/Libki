@@ -12,7 +12,8 @@ QT += webkitwidgets
 #CONFIG += console
 
 # Input
-HEADERS += loginwindow.h networkclient.h timerwindow.h
+HEADERS += networkclient.h timerwindow.h \
+    loginwindow.h
 FORMS += loginwindow.ui timerwindow.ui
 RESOURCES += libki.qrc
 RC_FILE += libki.rc

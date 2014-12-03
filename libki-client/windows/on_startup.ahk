@@ -44,3 +44,8 @@ AppsKey::
 
 ;Disable Alt-F4
 !F4::return
+
+; Allow Ctrl-Shift-Alt-l to disable keylock
+^+!l::
+	TryUnlock()
+return
