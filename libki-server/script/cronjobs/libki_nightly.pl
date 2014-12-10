@@ -41,7 +41,7 @@ my $user_rs = $schema->resultset('User');
 while ( my $user = $user_rs->next() ) {
     $user->minutes_allotment( $user_minutes_allotment );
     $user->minutes( $user_minutes );
-    $user->status( 'disabled' ) if ( $user->is_troublemaker eq 'Yes' );
+#    $user->status( 'disabled' ) if ( $user->is_troublemaker eq 'Yes' );
     $user->update();
 }
 

@@ -38,7 +38,7 @@ sub authenticate_via_sip {
 	    if ($patronapi{block_inet}){
 		return (0, 'ACCOUNT_BLOCKED' );
 	    }else{
-        	return (1,'',$patronapi{card}{barcode},$name);
+        	return (1,'',$patronapi{card}{barcode},$name,$patronapi{juvenile});
 	    }
 	}else{
 		return ( 0, 'INVALID_PASSWORD' );
