@@ -194,9 +194,10 @@ void TimerWindow::showSystemTrayIconTimeLeftMessage(){
 
 
     if ( !(minutesRemaining % 5) ){
-        trayIcon->showMessage( title, message , QSystemTrayIcon::Information, popupDelay );
-    } else if ( minutesRemaining <= 5 ) {
         trayIcon->showMessage( title, message , QSystemTrayIcon::Warning, popupDelay );
+    } else if ( minutesRemaining <= 5 ) {
+        QString message = QString::number(minutesRemaining) + " " + tr("Minutes Left\n\nBe sure to save your work.\n");
+        trayIcon->showMessage( title, message , QSystemTrayIcon::Critical, popupDelay );
     }
 }
 
