@@ -90,6 +90,9 @@ private:
     QString nodeName;
     QString nodeLocation;
 
+    qint16 nodeRegTime;
+    qint16 nodeDataTime;
+
     LogoutAction::Enum actionOnLogout;
 
     QString username;
