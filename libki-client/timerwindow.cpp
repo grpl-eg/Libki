@@ -186,17 +186,21 @@ void TimerWindow::restoreTimerWindow(){
 void TimerWindow::showSystemTrayIconTimeLeftMessage(){
     qDebug("showSystemTrayIconTimeLeftMessage");
 
-    QString title = tr("Time Remaining");
-    QString message = QString::number(minutesRemaining) + " " + tr("Minutes Left");
+    int size = 24;  //bott - attempt to make bigger message
+        QFont font("", size);
+
+    QString title = tr(" ***  Time Remaining  ***  ");
+    QString message = tr("\n\n      ") + QString::number(minutesRemaining) + " " + tr("Minutes Left      \n\n");
 
     QSettings settings;
     int popupDelay = settings.value("node/popup").toInt();
 
 
     if ( !(minutesRemaining % 5) ){
-        trayIcon->showMessage( title, message , QSystemTrayIcon::Information, popupDelay );
-    } else if ( minutesRemaining <= 5 ) {
         trayIcon->showMessage( title, message , QSystemTrayIcon::Warning, popupDelay );
+    } else if ( minutesRemaining <= 5 ) {
+        QString message = tr("\n\n      ") + QString::number(minutesRemaining) + " " + tr("Minutes Left\n\n      Be sure to save your work.      \n\n\n");
+        trayIcon->showMessage( title, message , QSystemTrayIcon::Critical, popupDelay );
     }
 }
 

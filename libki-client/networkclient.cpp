@@ -27,6 +27,15 @@ NetworkClient::NetworkClient() : QObject() {
     QSettings settings;
 
     nodeName = settings.value("node/name").toString();
+    nodeRegTime = settings.value("node/regtime").toInt();
+    nodeDataTime = settings.value("node/datatime").toInt();
+
+    if (!nodeRegTime ) {
+        nodeRegTime = 30;
+    }
+    if (!nodeDataTime ){
+        nodeDataTime = 30;
+    }
 
     // Fail over to hostname if node name isn't defined.
     if ( nodeName.isEmpty() ) {
@@ -60,7 +69,7 @@ NetworkClient::NetworkClient() : QObject() {
     registerNode();
     registerNodeTimer = new QTimer(this);
     connect(registerNodeTimer, SIGNAL(timeout()), this, SLOT(registerNode()) );
-    registerNodeTimer->start( 1000 * 10 );
+    registerNodeTimer->start( 1000 * nodeRegTime );
 
     updateUserDataTimer = new QTimer(this);
     connect(updateUserDataTimer, SIGNAL(timeout()), this, SLOT(getUserDataUpdate()));
@@ -323,7 +332,7 @@ void NetworkClient::doLoginTasks( int units ){
     QProcess::startDetached("windows/on_login.exe");
 #endif
 
-    updateUserDataTimer->start( 1000 * 10 );
+    updateUserDataTimer->start( 1000 * nodeDataTime );
     emit loginSucceeded( username, password, units );
 }
 
