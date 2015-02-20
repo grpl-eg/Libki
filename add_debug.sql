@@ -1,0 +1,15 @@
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS Debug; //
+CREATE PROCEDURE Debug(Message TEXT)
+BEGIN
+INSERT INTO _debug(msg) VALUES(Message);
+END; //
+
+DROP PROCEDURE IF EXISTS ClearDebugMessages; //
+CREATE PROCEDURE ClearDebugMessages()
+BEGIN
+TRUNCATE TABLE _debug;
+END; //
+
+DELIMITER ;
