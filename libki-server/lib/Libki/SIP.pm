@@ -33,6 +33,10 @@ sub authenticate_via_sip {
                 return ( 0, 'FEE_LIMIT', { fee_limit => $patronapi{money_owed} } );
         }
 
+        if ( $patronapi{expired} eq 't' ) {
+                return ( 0, 'ACCOUNT_EXPIRED' );
+        }
+
 	if ($name) {
 
 	    if ($patronapi{block_inet}){
