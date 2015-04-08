@@ -29,7 +29,7 @@
 
         <div id="user-table-toolbar" class="table-toolbar float-right btn-group">
             [% IF !c.config.SIP.enable || c.check_user_roles('superadmin') %]
-                <a href="#" class="new-user-button btn btn-primary"><i class="icon-plus icon-white"></i> New user</i></a>
+                <a href="#" class="new-user-button btn btn-primary" style='display:none;'><i class="icon-plus icon-white"></i> New user</i></a>
             [% END %]
             <a href="#" class="new-guest-button btn btn-info">New guest <i class="icon-user icon-white"></i></a>
         </div>
@@ -81,7 +81,7 @@
         </table> 
 
         <div id="client-table-toolbar" class="table-toolbar float-right btn-group">
-            <a href="#" class="new-user-button btn btn-primary"><i class="icon-plus icon-white"></i> New user</i></a>
+            <a href="#" class="new-user-button btn btn-primary" style='display:none;'><i class="icon-plus icon-white"></i> New user</i></a>
             <a href="#" class="new-guest-button btn btn-info">New guest <i class="icon-user icon-white"></i></a>
         </div>
 
