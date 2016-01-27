@@ -69,6 +69,34 @@ sub logout : Local : Args(1) {
     $c->forward( $c->view('JSON') );
 }
 
+sub get : Local : Args(1) {
+    my ( $self, $c, $id ) = @_;
+
+    my $client = $c->model('DB::Client')->find($id);
+
+    $c->stash(
+        {
+            'id'              	=> $client->id,
+            'name'        	=> $client->name,
+            'location'         	=> $client->location,
+        }
+    );
+    my $success = 1;
+
+    $c->forward( $c->view('JSON') );
+}
+
+sub kill : Local : Args(1) {
+    my ( $self, $c, $client_name ) = @_;
+
+    `/usr/bin/ssh $client_name 'killall libkiclient'`;
+
+    my $success = 1;
+
+    $c->forward( $c->view('JSON') );
+}
+
+
 =head1 AUTHOR
 
 Kyle M Hall <kyle@kylehall.info>

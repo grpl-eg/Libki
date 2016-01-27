@@ -19,8 +19,8 @@
                 <th>Daily minutes</th>
                 <th>Session minutes</th>
                 <th>Status</th>
-                <th>Message</th>
-                <th>Notes</th>
+                <th>Username</th>
+                <th>Name</th>
                 <th>Juvenile</th>
                 <th>Client</th>
                 <th>Status</th>
@@ -73,8 +73,8 @@
                 <th>Username</th>
                 <th>Minutes</th>
                 <th>User status</th>
-                <th>Message</th>
-                <th>Notes</th>
+                <th>Username</th>
+                <th>Name</th>
                 <th>Juvenile</th>
                 <th>Reserved</th>
             </thead>
@@ -94,6 +94,7 @@
         <div id="client-table-row-toolbar" class="table-row-toolbar btn-group">
             <button id="client-table-row-toolbar-time" class="btn btn-inverse"><i class="icon-time icon-white"></i> Modify time</button>
             <button id="client-table-row-toolbar-logout" class="btn btn-danger" onclick="LibkiLogOutClient( window.selected_id )"><i class="icon-off icon-white"></i> Log out</button>
+	    <button id='client-table-row-toolbar-start' class="btn btn-danger" onclick="LibkiStartClient( window.selected_id )"><i class="icon-off icon-white"></i> </button>
         </div>
   </div>
 </div>
@@ -680,6 +681,20 @@ function LibkiLogOutClient( id ) {
      .error(function() { })
      .complete(function() { });
   }
+}
+
+function LibkiStartClient( id ){
+   $.getJSON( '[% c.uri_for('/administration/api/client/get') %]' + '/' + id, function() {})
+     .success(function(data, textStatus, jqXHR) {
+         if ( data.location == 'SBRC' ) {
+	    $.getJSON( '[% c.uri_for('/administration/api/client/kill') %]' + '/' + data.name, function() {}) 
+		.success(function(data, textStatus, jqXHR) {}).error(function() { }).complete(function() { });
+         } else {
+             DisplayMessage( 'error', 'Not a SBRC station!' );
+         }
+     })
+     .error(function() { })
+     .complete(function() { });
 }
 
 function HandleClientTableRefreshCounter() {
