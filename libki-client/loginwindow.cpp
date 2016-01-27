@@ -90,6 +90,11 @@ void LoginWindow::getSettings() {
         passwordLabel->setText(settings.value("labels/password").toString() );
     }
 
+    if ( ! settings.value("labels/header").toString().isEmpty() ) {
+        headerLabel->setText(settings.value("labels/header").toString() );
+    }
+
+
     /* Hide Password Field */
 
     if ( settings.value("node/no_passwords").toString().toInt() ) {
