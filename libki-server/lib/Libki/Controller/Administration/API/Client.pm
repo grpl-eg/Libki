@@ -90,10 +90,52 @@ sub kill : Local : Args(1) {
     my ( $self, $c, $client_name ) = @_;
 
     `/usr/bin/ssh $client_name 'killall libkiclient'`;
+    `/usr/bin/ssh $client_name '/bin/mv /etc/checkLibki.pl /etc/checkLibki.pl.'`;
 
     my $success = 1;
 
     $c->forward( $c->view('JSON') );
+}
+
+sub startSBRC : Local : Args(2) {
+    my ( $self, $c, $id, $len ) = @_;
+    my $success =0;
+    
+    my $client = $c->model('DB::Client')->find($id);
+
+    my $usr;
+    if ($client->name eq 'sbrc1'){ $usr = 5; }
+    if ($client->name eq 'sbrc2'){ $usr = 6; }
+
+
+    my $session = $c->model('DB::Session')->create(
+        {
+           user_id   => $usr,
+           client_id => $client->id,
+           status    => 'active'
+        }
+     );
+
+    my $user = $client->session->user;
+    $user->set_column( 'minutes', $len );
+
+        if ( $user->update() ) {
+            $success = 1;
+        }
+
+    $c->model('DB::Statistic')->create(
+       {
+           username        => $client->name,
+           client_name     => $client->name,
+           client_location => $client->location,
+           action          => 'LOGIN'
+           # when            => $now
+       }
+     );
+     $success = 1;
+
+    $c->forward( $c->view('JSON') );
+
 }
 
 
