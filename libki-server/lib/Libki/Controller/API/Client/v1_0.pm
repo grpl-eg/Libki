@@ -124,14 +124,13 @@ sub index : Path : Args(0) {
 			( $eg_success, $eg_error, $barcode, $name, $juve, $eg_usrname ) =
                                 Libki::SIP::authenticate_via_sip( $c, $client_name, $username, $password );
 		$user->notes($name);
+		$user->message($eg_usrname);
 		$user->update();
 		}
 		if (! $user) { 
                         ( $eg_success, $eg_error, $barcode, $name, $juve, $eg_usrname ) =
                                 Libki::SIP::authenticate_via_sip( $c, $client_name, $username, $password );
                 }
-                $user->message($eg_usrname);
-                $user->update();
 
 	} # now we have the barocde in the username var and the user object
 	} # end not guest
