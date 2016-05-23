@@ -101,7 +101,9 @@ sub create_guest : Local : Args(0) {
     my $username = "guest" . $current_guest_number;
     my $password =
       random_string("nnnn");    #TODO: Make the pattern a system setting
-    my $minutes = $c->model('DB::Setting')->find('DefaultTimeAllowance')->value;
+    #my $minutes = $c->model('DB::Setting')->find('DefaultTimeAllowance')->value;
+    ## force guest sessions to 30 minutes
+    my $minutes = 30;
 
     my $success = 0;
 
@@ -109,7 +111,8 @@ sub create_guest : Local : Args(0) {
         {
             username          => $username,
             password          => $password,
-            minutes_allotment => 30,
+            minutes 	      => $minutes,
+	    message	      => 'guest',
             status            => 'enabled',
             is_guest          => 'Yes',
         }

@@ -93,17 +93,20 @@ sub index : Path : Args(0) {
         }
     }
     else {
+	# Populate scalers with CGI param values
         my $username        = $c->request->params->{'username'};
 	$username =~ s/^\s+|\s+$//g;
         my $password        = $c->request->params->{'password'};
         my $client_name     = $c->request->params->{'node'};
         my $client_location = $c->request->params->{'location'};
+
+	# Initialize some additional variables
 	my ($user,$barcode,$name,$eg_success,$eg_error,$eg_usrname);
 	my $juve = 'no';
 
         if ($username !~ /^guest/i) {
-	## Deal with EG usrname or barcode entered
-	if ($username !~ /^[0-9]+$/){ # we have an EG usrname
+	   ## Deal with EG usrname or barcode entered
+	   if ($username !~ /^[0-9]+$/){ # we have an EG usrname
 		$eg_usrname = $username;
 		$user = $c->model('DB::User')->single( { message => $eg_usrname } );
 		if (! $user) {
@@ -118,36 +121,37 @@ sub index : Path : Args(0) {
 		} else {
 			$username = $user->username(); # because the username column always contains the barcode
 		}
-	} else { # we have an EG barcode
+	   } else { # we have an EG barcode
 		$user = $c->model('DB::User')->single( { username => $username } );
-		if ($user && !$user->notes) { # populate notes field if empty
+		if ($user && (!$user->notes || !$user->message)) { # populate notes field if empty
 			( $eg_success, $eg_error, $barcode, $name, $juve, $eg_usrname ) =
                                 Libki::SIP::authenticate_via_sip( $c, $client_name, $username, $password );
-		$user->notes($name);
-		$user->message($eg_usrname);
-		$user->update();
+			$user->notes($name);
+                	$user->message($eg_usrname);
+                	$user->update();
 		}
 		if (! $user) { 
                         ( $eg_success, $eg_error, $barcode, $name, $juve, $eg_usrname ) =
                                 Libki::SIP::authenticate_via_sip( $c, $client_name, $username, $password );
                 }
 
-	} # now we have the barocde in the username var and the user object
-	} # end not guest
-	  else { 
+	   } 
+
+	} else {  
+		# Must be a guest user, we'll fetch that user info
 		$user = $c->model('DB::User')->single( { username => $username } );
         } 
 
         if ( $action eq 'login' ) {
-## cut down branch time on initial login
-if ($user){
-if ( ($client_location !~ /^GRM|^XXX|^YS|^HIS/) && ($user->minutes() > 60) ) {
-            $user->minutes(60);
-            my $success = $user->update();
-            $success &&= 1;
-            $c->stash( message_cleared => $success );
-}
-}
+  	    ## cut down branch time on initial login
+	    if ($user){
+	   	if ( ($client_location !~ /^GRM|^XXX|^YS|^HIS/) && ($user->minutes() > 60) ) {
+            		$user->minutes(60);
+            		my $success = $user->update();
+            		$success &&= 1;
+            		$c->stash( message_cleared => $success );
+		}
+ 	    }
 
 	    my ( $success, $error ) = ( 1, undef );
             ## Don't hit EG twice or for guest account
@@ -163,8 +167,7 @@ if ( ($client_location !~ /^GRM|^XXX|^YS|^HIS/) && ($user->minutes() > 60) ) {
 	
             ## Process client requests
             if ($eg_success || ($username =~ /^guest/i ) ) {
-                if ( $c->authenticate( { username => $username, password => $password } ) )
-                {
+                if ( $c->authenticate( { username => $username, password => $password } ) ) {
                     $c->stash( units => $user->minutes );
 
                     if ( $user->session ) {
@@ -194,31 +197,22 @@ if ( ($client_location !~ /^GRM|^XXX|^YS|^HIS/) && ($user->minutes() > 60) ) {
                           $c->model('DB::Client')
                           ->search( { name => $client_name } )->next();
 
-## Can I delete any existing session here?  $client->session->delete();
-    if ( defined($client) && defined( $client->session ) ) {
-        if ( $client->session->delete() ) {
-            $success = 1;
-        }
-    }
+			## delete any existing session here
+    			if ( defined($client) && defined( $client->session ) ) {
+        			if ( $client->session->delete() ) {
+            			   $success = 1;
+        			}
+    			}
 
                         if ($client) {
                             my $reservation = $client->reservation;
 
-                            if (
-                                !$reservation
-                                && !(
-                                    $c->stash->{'Settings'}
-                                    ->{'ClientBehavior'} =~ 'FCFS'
-                                )
-                              )
-                            {
+                            if ( !$reservation && !( $c->stash->{'Settings'}->{'ClientBehavior'} =~ 'FCFS') ){
                                 $c->stash( error => 'RESERVATION_REQUIRED' );
                             }
-                            elsif ( !$reservation
-                                || $reservation->user_id() == $user->id() )
-                            {
+                            elsif ( !$reservation || $reservation->user_id() == $user->id() ) {
+				# If this is "the" user, delete reservation
                                 $reservation->delete() if $reservation;
-				# my $userres = $c->model('DB::Reservation')->search( { user_id => $user->id } )->next()->delete();
 				$user->reservation->delete() if $user->reservation;
 
                                 my $session = $c->model('DB::Session')->create(
@@ -247,41 +241,42 @@ if ( ($client_location !~ /^GRM|^XXX|^YS|^HIS/) && ($user->minutes() > 60) ) {
                             $c->stash( error => 'INVALID_CLIENT' );
                         }
                     }
-                }
-                else {
+                } # End sucessful auth
+                else {  
+		      # here we must have a new user
                       if ($username !~ /^guest/i) {
 
-		    # GRPL - if SIP authenticates, but they're not local, go ahead and add them
-			my $min = 120;
-			if ($username =~ /^555/) { $min = 30; }
+		          # GRPL - if SIP authenticates, but they're not local, go ahead and add them
+			  my $min = 120;
+			  if ($username =~ /^555/) { $min = 30; }
 
-			my $existinguser = $c->model('DB::User')->single( { message => $eg_usrname } );
-			if($existinguser){
+			  my $existinguser = $c->model('DB::User')->single( { message => $eg_usrname } );
+			  if($existinguser){
 				$min = $existinguser->minutes;
 				$existinguser->delete();
-			}
-			#$existinguser->delete() if $existinguser;
+			  }
 			
-			my $user = $c->model('DB::User')->update_or_create(
+			  my $user = $c->model('DB::User')->update_or_create(
         		    {
             			username          => $username,
             			password          => $password,
             			minutes		  => $min,
             			status            => 'enabled',
 				notes		  => $name || '',
-				message		  => $eg_usrname || '',
+				message		  => $eg_usrname || $username,
                                 is_troublemaker   => $juve || 'No',
         		    }
-    			);
+    			  );
 
                         $c->stash( error => 'NEW_USER_ADDED' );
                     }
                 }
-            }
+            } # end ---  if ($eg_success || ($username =~ /^guest/i ) )
             else {
                 $c->stash( error => $error || $eg_error );
             }
-        }
+        } # end "if $action eq 'login'" 
+
         elsif ( $action eq 'clear_message' ) {
             $user->message('');
             my $success = $user->update();
@@ -292,7 +287,7 @@ if ( ($client_location !~ /^GRM|^XXX|^YS|^HIS/) && ($user->minutes() > 60) ) {
 
             my $status;
 	    my $client_name = $c->request->params->{'node'};
-	    my $dbh=DBI->connect("dbi:mysql:libki","user","passwd");
+	    my $dbh=DBI->connect("dbi:mysql:libki","libki","dfw44");
 	    my $sth = $dbh->prepare("select name from sessions join clients on sessions.client_id = clients.id where name = '$client_name'");
 	    $sth->execute();
 	    my $sc =$sth->fetchrow_hashref;
